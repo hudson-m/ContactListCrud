@@ -1,7 +1,7 @@
 import pyodbc
 from flask import Flask
 
-app = Flask(trab)
+app = Flask(__name__)
 
 @app.route("/api/getContatos")
 def read(conn):
