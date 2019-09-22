@@ -7,31 +7,45 @@ app = Flask(__name__)
 def read(conn):
     print("Read")
     cursor = conn.cursor()
-    cursor.execute("select * from Pessoa")
+    cursor.execute('''SELECT 
+                        nome,
+                        dataNascimento,
+                        regiao,
+                        ddd,
+                        t.numero,
+                        rua,
+                        e.numero,
+                        complemento,
+                        CEP,
+                        cidade,
+                        estado 
+                        FROM Pessoa p 
+                        INNER JOIN Telefone t ON p.idPessoa = t.fkPessoa 
+                        INNER JOIN Endereco e ON e.fkPessoa = p.idPessoa;''')
     for row in cursor:
         print(f'row = {row}')
     print()
 
-@app.route("")
-def create(conn):
+@app.route("/create")
+def create(conn,nome,dataNascimento,regiao,ddd,numero,rua,numeroEndereco,complemento,cep,cidade,estado):
     print("Create")
     cursor = conn.cursor()
     cursor.execute(
         'insert into Pessoa(nome,dataNascimento) values (?,?)',
-        ('batata', '1910-10-10')
+        (nome, dataNascimento)
     )
     cursor.execute(
-        'insert into Telefone(regiao,ddd,numero) values (?,?,?)',
-        (55, 41, 999999999)
+        'insert into Telefone(regiao,ddd,numero,fkPessoa) values (?,?,?,(SELECT top(1) idPessoa FROM Pessoa Order by idPessoa desc))',
+        (regiao, ddd, numero)
     )
     cursor.execute(
-        'insert into Endereco(rua,numero,complemento,CEP,cidade,estado) values (?,?,?,?,?,?)',
-        ('rua batata', 123, 'num sei', 1234567, 'curitiba', 'parana')
+        'insert into Endereco(rua,numero,complemento,CEP,cidade,estado,fkPessoa) values (?,?,?,?,?,?,(SELECT top(1) idPessoa FROM Pessoa Order by idPessoa desc))',
+        (rua, numeroEndereco, complemento, cep,cidade,estado)
     )
     conn.commit()
     read(conn)
 
-@app.route("")
+@app.route("/update")
 def update(conn):
     print("Update")
     cursor = conn.cursor()
@@ -50,7 +64,7 @@ def update(conn):
     conn.commit()
     read(conn)
 
-@app.route("")
+@app.route("/delete")
 def delete(conn):
     print("Delete")
     cursor = conn.cursor()
@@ -110,9 +124,9 @@ conn = pyodbc.connect(
 )
 
 #createTable(conn)
-read(conn)
-create(conn)
-update(conn)
-delete(conn)
+#read(conn)
+#create(conn)
+#update(conn)
+#delete(conn)
 
 conn.close()
